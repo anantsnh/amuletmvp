@@ -2,13 +2,11 @@ import os
 from io import BufferedReader
 from dotenv import load_dotenv
 load_dotenv()
-from flask import Flask, render_template, request
+from flask import Flask, request
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
-
-prompt = "you are a helpful assistant (that talks like a pirate) that takes in an audio transcript of the users day, and helps the user recall details about the day, different conversations, key details, summaries, etc. The next message from user will be the transcript, and then the user will make some sort of summary request."
 
 
 @app.route("/whats_my_val", methods=(["GET"]))  # create a route for the app
@@ -25,9 +23,17 @@ def get_transcript():  # create a function that will be called when the route is
 
   print(f'ah, you were sent a secret value: {secret_value}')
   if secret_value == os.getenv('SECRET_VAL'):
-    file = request.files['audiofile']
-    print('ok, about to call whisper!')
+    print('loading file')
+    try:
+        file = request.files['audiofile']
+        
+    except Exception as e:
+        print('error loading file')
+        print(e)
+        exit()
 
+    print('ok, about to call whisper!')
+    
     # this changes the FileStorage type to a BufferedReader type, which I guess OpenAI needs
     file.name = file.filename
     file = BufferedReader(file)
@@ -46,9 +52,18 @@ def get_transcript():  # create a function that will be called when the route is
 def get_summary():
    secret_value = request.headers['secret_value']
    print(f'ah, you were sent a secret value: {secret_value}')
-   
+
    if secret_value == os.getenv('SECRET_VAL'):
+
+    print('loading file')
+    try:
+        file = request.files['audiofile']
+    except Exception as e:
+        print('error loading file')
+        print(e)
+        exit()
     file = request.files['audiofile']
+
     print('ok, about to call whisper!')
 
     # this changes the FileStorage type to a BufferedReader type, which I guess OpenAI needs
@@ -61,7 +76,8 @@ def get_summary():
     transcript_str = transcript["text"]  # accessing the "text" from the JSON file that OpenAI returns
 
     summary_request = request.form['summary_request']
-    print('ok got the transcript & summary request, now sending it to gpt3.5: ' + summary_request)
+    prompt = request.form['prompt']
+    print('ok got the transcript & summary request & prompt, now sending it to gpt3.5: ' + summary_request + 'prompt:' + prompt)
     
     summary = openai.ChatCompletion.create(
        model="gpt-3.5-turbo",
@@ -81,7 +97,6 @@ def get_summary():
 
 
 app.run()
-
 
 
 ######## Anant's code ########
