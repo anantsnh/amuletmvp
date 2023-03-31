@@ -6,11 +6,14 @@ from flask import Flask, request
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-app = Flask(__name__)
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
 
 @app.route("/whats_my_val", methods=(["GET"]))  # create a route for the app
 def whats_my_val():  # create a function that will be called when the route is requested
+  print('oh?')
   response = f'here you go friend, your val is ' + request.headers['secret_value']
   print('ah, someone just got something')
   return response
@@ -77,7 +80,7 @@ def get_summary():
 
     summary_request = request.form['summary_request']
     prompt = request.form['prompt']
-    print('ok got the transcript & summary request & prompt, now sending it to gpt3.5: ' + summary_request + 'prompt:' + prompt)
+    print('ok got the transcript & summary request & prompt, now sending it to gpt3.5: ' + summary_request + ' prompt: ' + prompt)
     
     summary = openai.ChatCompletion.create(
        model="gpt-3.5-turbo",

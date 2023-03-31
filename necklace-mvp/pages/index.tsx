@@ -2,10 +2,40 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
+import { useState } from 'react'
+import { AnyNaptrRecord } from 'dns'
 
 const inter = Inter({ subsets: ['latin'] })
 
+
 export default function Home() {
+
+  const [audioFile, setAudioFile] = useState<File | null>(null); // for the audio file
+  const [sumReq, setSumReq] = useState(''); // for the summary request
+  const [promptReq, setPromptReq] = useState(''); // for the prompt
+
+
+  const handleClick = async (event:any) => {
+    event.preventDefault()
+    console.log(sumReq + ' ' + promptReq + ' ahah')
+
+    const formData = new FormData();
+    if (audioFile !== null) {
+      formData.append('audiofile', audioFile);
+    }
+    formData.append('summary_request', sumReq);
+    formData.append('prompt', promptReq);
+
+    const response = await fetch('http://127.0.0.1:5000/get_summary', {
+      method: 'POST',
+      body: formData,
+      headers: {'secret_value': 'val219'}
+    });
+
+    const data = await response.text();
+    console.log(data);
+  }
+
   return (
     <>
       <Head>
@@ -38,6 +68,34 @@ export default function Home() {
             </a>
           </div>
         </div>
+        <form>
+            <label>
+              Audio file:
+              <input type="file" accept="audio/*" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setAudioFile(file);
+                }
+              }} />
+            </label>
+            <br />
+            <label>
+              What is your summary request?
+              <br />
+              <textarea onChange={(e) => {
+                setSumReq(e.target.value)
+              }} />
+            </label>
+            <br />
+            <label>
+              What prompt do you want to use?
+              <br />
+              <textarea onChange={(e) => {
+                setPromptReq(e.target.value)
+              }} />
+            </label>
+            <button onClick={handleClick}>Submit</button>
+        </form>
 
         <div className={styles.center}>
           <Image
